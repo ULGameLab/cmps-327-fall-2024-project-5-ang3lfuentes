@@ -129,14 +129,122 @@ public class Enemy : MonoBehaviour
     }
 
     // TODO: Enemy chases the player when it is nearby
-    private void HandleEnemyBehavior2()
-    {
-        
+    private void HandleEnemyBehavior2(){
+         float playerDistance = Vector3.Distance(playerGameObject.transform.position, transform.position);
+            switch (state){
+                case EnemyState.DEFAULT:
+                    if (playerDistance <= visionDistance){
+                        state = EnemyState.CHASE;
+                    }
+                    else{
+                        if (path.Count <= 0){
+                            path = pathFinder.RandomPath(currentTile, 20);
+                        }
+                        if (path.Count > 0){
+                            targetTile = path.Dequeue();
+                            state = EnemyState.MOVING;
+                        }
+                    }
+                    break;
+
+                case EnemyState.CHASE:
+                    Tile playersTile = playerGameObject.GetComponent<Player>().currentTile;
+                    if (playersTile != targetTile){
+                        targetTile = playersTile;
+                        path = pathFinder.FindPathAStar(currentTile, targetTile);
+                    }
+                    if (path.Count > 0){
+                        targetTile = path.Dequeue();
+                        state = EnemyState.MOVING;
+                    }
+                    else{
+                        state = EnemyState.DEFAULT;
+                    }
+                    break;
+
+                case EnemyState.MOVING:
+                    velocity = targetTile.gameObject.transform.position - transform.position;
+                    transform.position = transform.position + (velocity.normalized * speed) * Time.deltaTime;
+                    if (Vector3.Distance(transform.position, targetTile.gameObject.transform.position) <= 0.05f){
+                        currentTile = targetTile;
+                        if (playerDistance <= visionDistance){
+                            state = EnemyState.CHASE;
+                        }
+                        else{
+                            state = EnemyState.DEFAULT;
+                        }
+                    }
+                    break;
+                default:
+                    state = EnemyState.DEFAULT;
+                    break;
+            }
     }
 
-    // TODO: Third behavior (Describe what it does)
-    private void HandleEnemyBehavior3()
-    {
+    // TODO: Third behavior - The behavior for this enemy is to wander around like the first and second enemy but similar
+    //the second enemy, it chases the player but with a delay, changing the target tile to the position the player was
+    //at a certain distance and chases the player based on that tile instead of the player's current position.
+    private void HandleEnemyBehavior3(){
+         float playerDistance = Vector3.Distance(playerGameObject.transform.position, transform.position);
+                    switch (state){
+                        case EnemyState.DEFAULT:
+                            if (playerDistance <= visionDistance){
+                                state = EnemyState.CHASE;
+                            }
+                            else{
+                                if (path.Count <= 0){
+                                    path = pathFinder.RandomPath(currentTile, 20);
+                                }
+                                if (path.Count > 0){
+                                    targetTile = path.Dequeue();
+                                    state = EnemyState.MOVING;
+                                }
+                            }
+                            break;
 
+                        case EnemyState.CHASE:
+                            Tile playersTile = playerGameObject.GetComponent<Player>().currentTile;
+                            targetTile = null;
+                            foreach (Tile adjacent in playersTile.Adjacents){
+                                    foreach (Tile otherTile in adjacent.Adjacents){
+                                             if (otherTile != playersTile && otherTile != currentTile){
+                                                targetTile = otherTile;
+                                                break;
+                                             }
+                                    }
+                                    if (targetTile != null){
+                                        break;
+                                    }
+                            }
+                            if (targetTile != null){
+                                path = pathFinder.FindPathAStar(currentTile, targetTile);
+                            }
+
+                            if (path.Count > 0){
+                                targetTile = path.Dequeue();
+                                state = EnemyState.MOVING;
+                            }
+                            else{
+                                state = EnemyState.DEFAULT;
+                            }
+                            break;
+
+                        case EnemyState.MOVING:
+                            velocity = targetTile.gameObject.transform.position - transform.position;
+                            transform.position = transform.position + (velocity.normalized * speed) * Time.deltaTime;
+                            if (Vector3.Distance(transform.position, targetTile.gameObject.transform.position) <= 0.05f){
+                                currentTile = targetTile;
+                                if (playerDistance <= visionDistance){
+                                    state = EnemyState.CHASE;
+                                }
+                                else{
+                                    state = EnemyState.DEFAULT;
+                                }
+                            }
+                            break;
+                        default:
+                            state = EnemyState.DEFAULT;
+                            break;
+                    }
     }
 }

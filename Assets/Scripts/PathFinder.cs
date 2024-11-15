@@ -55,10 +55,24 @@ public class PathFinder
             }
 
             // for each neighboring tile calculate the costs
-            // You just need to fill code inside this foreach only
             foreach (Tile nextTile in current.tile.Adjacents)
             {
-                
+                 if (DoneList.Exists(n => n.tile.Equals(nextTile))) continue;
+
+                    double G = current.costSoFar + 10;
+                    double H = HeuristicsDistance(nextTile, goalTile);
+                    double F = G + H;
+
+                    Node nextNode = TODOList.Find(n => n.tile.Equals(nextTile));
+                    if (nextNode == null){
+                       nextNode = new Node(nextTile, F, current, G);
+                       TODOList.Add(nextNode);
+                       }
+                    else if (G < nextNode.costSoFar){
+                        nextNode.cameFrom = current;
+                        nextNode.costSoFar = G;
+                        nextNode.priority = F;
+                    }
             }
         }
         return new Queue<Tile>(); // Returns an empty Path if no path is found
@@ -66,7 +80,6 @@ public class PathFinder
 
     // TODO: Find the path based on A-Star Algorithm
     // In this case avoid a path passing near an enemy tile
-    // BONUS TASK (Required the for Honors Contract Students)
     public Queue<Tile> FindPathAStarEvadeEnemy(Tile start, Tile goal)
     {
         TODOList = new List<Node>();
